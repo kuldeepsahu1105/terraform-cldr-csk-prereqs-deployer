@@ -1,6 +1,6 @@
 # ------- Required -------
 
-prefix     = "csk01"    # 4-7 characters; used as a name prefix for all resources
+prefix     = "cldr-csk01"    # 4-7 characters; used as a name prefix for all resources
 aws_region = "us-east-1"
 
 # ------- VPC -------
@@ -46,7 +46,7 @@ vpc_cidr = "10.0.0.0/16"
 # private subnets is handled by the VPN/DC gateway and no public resources
 # are needed.
 
-create_public_subnet = false
+create_public_subnet = true
 
 # public_subnet_name = "csk01-csk-public"    # Defaults to "<prefix>-csk-public"
 
@@ -72,8 +72,8 @@ create_public_subnet = false
 # a new RSA key pair is generated and the private key is saved to
 # "<prefix>-bastion-ssh-key.pem" in the parent directory.
 
-# create_bastion = false
+create_bastion = true
 
-# bastion_ssh_private_key_file = null    # null = auto-generate; or set to e.g. "~/.ssh/id_rsa"
+bastion_ssh_private_key_file = null    # null = auto-generate; or set to e.g. "~/.ssh/id_rsa"
 
-# bastion_ssh_allowed_cidrs = ["203.0.113.0/24"]    # CIDRs permitted to reach port 22
+bastion_ssh_allowed_cidrs = ["203.0.113.0/24"]    # CIDRs permitted to reach port 22
