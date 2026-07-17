@@ -1,0 +1,79 @@
+# ------- Required -------
+
+prefix     = "csk01"    # 4-7 characters; used as a name prefix for all resources
+aws_region = "us-east-1"
+
+# ------- VPC -------
+
+# vpc_name = "csk01-csk-vpc"    # Defaults to "<prefix>-csk-vpc"
+vpc_cidr = "10.0.0.0/16"
+
+# ------- Private Network infrastructure -------
+# Private subnets are tagged kubernetes.io/role/internal-elb=1 (required by
+# the AWS Load Balancer Controller). They must be reachable from the cluster
+# operator via VPN or AWS DirectConnect.
+#
+# By default a single /24 subnet is created in the first available AZ.
+# Override below to specify multiple subnets across AZs (recommended for HA).
+
+# private_subnet_name = "csk01-csk-private"    # Defaults to "<prefix>-csk-private"
+
+# private_subnets = [
+#   {
+#     name = "csk01-csk-private-01"
+#     cidr = "10.0.1.0/24"
+#     az   = "us-east-1a"
+#     tags = {}
+#   },
+#   {
+#     name = "csk01-csk-private-02"
+#     cidr = "10.0.2.0/24"
+#     az   = "us-east-1b"
+#     tags = {}
+#   },
+# ]
+
+# private_route_table_name = "csk01-csk-private"    # Defaults to "<prefix>-csk-private"
+
+# ------- Public Network infrastructure (optional) -------
+# Set create_public_subnet = true when NO VPN or AWS DirectConnect is available.
+# This creates:
+#   - A public subnet with an Internet Gateway (for bastion host access)
+#   - NAT Gateway(s) so private subnets can reach the internet outbound
+#     (e.g. pulling container images from public registries)
+#
+# When VPN or DirectConnect is available, leave this false. Routing to the
+# private subnets is handled by the VPN/DC gateway and no public resources
+# are needed.
+
+create_public_subnet = false
+
+# public_subnet_name = "csk01-csk-public"    # Defaults to "<prefix>-csk-public"
+
+# public_subnets = [
+#   {
+#     name = "csk01-csk-public-01"
+#     cidr = "10.0.0.0/24"
+#     az   = "us-east-1a"
+#     tags = {}
+#   },
+# ]
+
+# public_route_table_name = "csk01-csk-public"    # Defaults to "<prefix>-csk-public"
+# nat_gateway_name        = "csk01-csk-nat"        # Defaults to "<prefix>-csk-nat"
+
+# ------- Security Groups -------
+
+# security_group_intra_name = "csk01-csk-intra"    # Defaults to "<prefix>-csk-intra"
+
+# ------- Bastion Host (optional) -------
+# Requires create_public_subnet = true.
+# When create_bastion = true and bastion_ssh_private_key_file is null (default),
+# a new RSA key pair is generated and the private key is saved to
+# "<prefix>-bastion-ssh-key.pem" in the parent directory.
+
+# create_bastion = false
+
+# bastion_ssh_private_key_file = null    # null = auto-generate; or set to e.g. "~/.ssh/id_rsa"
+
+# bastion_ssh_allowed_cidrs = ["203.0.113.0/24"]    # CIDRs permitted to reach port 22
