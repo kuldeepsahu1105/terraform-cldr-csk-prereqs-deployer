@@ -38,6 +38,10 @@ locals {
     az   = data.aws_availability_zones.csk.names[0]
     tags = {}
   }])
+
+  s3_bucket_full_name = var.s3_bucket_name != "" ? lower("${var.prefix}-${var.s3_bucket_name}") : ""
+  iam_user_name       = "${var.prefix}-csk-ccf-awc-restricted"
+  efs_name            = "${var.prefix}-ccf-awc-efs"
 }
 
 # ------- VPC -------
@@ -196,4 +200,189 @@ resource "aws_vpc_security_group_egress_rule" "csk" {
   cidr_ipv4         = "0.0.0.0/0"
 
   tags = { Name = "${var.prefix}-csk-egress" }
+}
+
+# ------- S3 Bucket (optional) -------
+
+resource "aws_s3_bucket" "csk" {
+  count = var.create_s3_bucket && local.s3_bucket_full_name != "" ? 1 : 0
+
+  bucket = local.s3_bucket_full_name
+
+  tags = {
+    Name = local.s3_bucket_full_name
+  }
+}
+
+# ------- IAM User + Policies (optional) -------
+
+resource "aws_iam_user" "restricted" {
+  count = var.create_iam_user ? 1 : 0
+
+  name = local.iam_user_name
+  path = "/"
+
+  tags = {
+    Name = local.iam_user_name
+  }
+}
+
+data "aws_iam_policy_document" "s3" {
+  statement {
+    sid    = "S3Access"
+    effect = "Allow"
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ]
+    resources = concat(
+      ["arn:aws:s3:::*"],
+      local.s3_bucket_full_name != "" ? ["arn:aws:s3:::${local.s3_bucket_full_name}", "arn:aws:s3:::${local.s3_bucket_full_name}/*"] : []
+    )
+  }
+}
+
+resource "aws_iam_policy" "s3" {
+  count = var.create_iam_policies ? 1 : 0
+
+  name   = "${var.prefix}-s3-policy"
+  policy = data.aws_iam_policy_document.s3.json
+}
+
+data "aws_iam_policy_document" "route53" {
+  statement {
+    sid    = "Route53Restricted"
+    effect = "Allow"
+    actions = [
+      "route53:ListHostedZones",
+      "route53:ListResourceRecordSets",
+      "route53:ChangeResourceRecordSets",
+      "route53:GetHostedZone"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "route53" {
+  count = var.create_iam_policies ? 1 : 0
+
+  name   = "${var.prefix}-route53-policy"
+  policy = data.aws_iam_policy_document.route53.json
+}
+
+data "aws_iam_policy_document" "ccf" {
+  statement {
+    sid    = "CCFReadOnly"
+    effect = "Allow"
+    actions = [
+      "ec2:Describe*",
+      "elasticloadbalancing:Describe*",
+      "autoscaling:Describe*",
+      "iam:Get*",
+      "iam:List*",
+      "eks:Describe*",
+      "eks:List*",
+      "logs:Describe*",
+      "logs:Get*",
+      "cloudwatch:Describe*",
+      "cloudwatch:Get*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ccf" {
+  count = var.create_iam_policies ? 1 : 0
+
+  name   = "${var.prefix}-ccf-policy"
+  policy = data.aws_iam_policy_document.ccf.json
+}
+
+resource "aws_iam_user_policy_attachment" "s3" {
+  count = var.create_iam_user && var.create_iam_policies ? 1 : 0
+
+  user       = aws_iam_user.restricted[0].name
+  policy_arn = aws_iam_policy.s3[0].arn
+}
+
+resource "aws_iam_user_policy_attachment" "route53" {
+  count = var.create_iam_user && var.create_iam_policies ? 1 : 0
+
+  user       = aws_iam_user.restricted[0].name
+  policy_arn = aws_iam_policy.route53[0].arn
+}
+
+resource "aws_iam_user_policy_attachment" "ccf" {
+  count = var.create_iam_user && var.create_iam_policies ? 1 : 0
+
+  user       = aws_iam_user.restricted[0].name
+  policy_arn = aws_iam_policy.ccf[0].arn
+}
+
+# ------- EFS (optional) -------
+
+resource "aws_security_group" "efs" {
+  count = var.create_efs ? 1 : 0
+
+  name        = "${var.prefix}-ccf-awc-efs-sg"
+  description = "EFS NFS access [${var.prefix}]"
+  vpc_id      = aws_vpc.csk.id
+
+  tags = {
+    Name = "${var.prefix}-ccf-awc-efs-sg"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "efs_vpc" {
+  count = var.create_efs ? 1 : 0
+
+  security_group_id = aws_security_group.efs[0].id
+  description       = "Allow NFS from VPC CIDR"
+  ip_protocol       = "tcp"
+  from_port         = 2049
+  to_port           = 2049
+  cidr_ipv4         = var.vpc_cidr
+}
+
+resource "aws_vpc_security_group_ingress_rule" "efs_10" {
+  count = var.create_efs ? 1 : 0
+
+  security_group_id = aws_security_group.efs[0].id
+  description       = "Allow NFS from 10.0.0.0/8"
+  ip_protocol       = "tcp"
+  from_port         = 2049
+  to_port           = 2049
+  cidr_ipv4         = "10.0.0.0/8"
+}
+
+resource "aws_vpc_security_group_egress_rule" "efs" {
+  count = var.create_efs ? 1 : 0
+
+  security_group_id = aws_security_group.efs[0].id
+  description       = "Allow all outbound traffic"
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+resource "aws_efs_file_system" "ccf_awc" {
+  count = var.create_efs ? 1 : 0
+
+  creation_token = local.efs_name
+  encrypted      = true
+
+  tags = {
+    Name = local.efs_name
+  }
+}
+
+resource "aws_efs_mount_target" "ccf_awc" {
+  for_each = var.create_efs ? aws_subnet.csk_private : {}
+
+  file_system_id  = aws_efs_file_system.ccf_awc[0].id
+  subnet_id       = each.value.id
+  security_groups = [aws_security_group.efs[0].id]
 }
