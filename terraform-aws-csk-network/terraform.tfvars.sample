@@ -77,3 +77,18 @@ create_bastion = true
 bastion_ssh_private_key_file = null    # null = auto-generate; or set to e.g. "~/.ssh/id_rsa"
 
 bastion_ssh_allowed_cidrs = ["203.0.113.0/24"]    # CIDRs permitted to reach port 22
+
+# ------- S3 + IAM (optional) -------
+
+create_s3_bucket   = true
+s3_bucket_name     = "ccf-artifacts"   # Final bucket name: <prefix>-<s3_bucket_name>
+
+create_iam_user     = true
+create_iam_policies = true
+# IAM user name is always: <prefix>-csk-ccf-awc-restricted
+
+# ------- EFS (optional) -------
+
+create_efs = true
+# EFS name is always: <prefix>-ccf-awc-efs
+# Mount targets are created in all private subnets from this module.
