@@ -201,6 +201,59 @@ These values are passed as inputs to the CSK cluster-manager (`csk-cluster-manag
 
 ---
 
+```bash
+Outputs:
+
+availability_zones = tolist([
+  "ap-southeast-2a",
+  "ap-southeast-2b",
+  "ap-southeast-2c",
+])
+bastion_ip = "13.236.68.167"
+bastion_keypair_name = "test-csk-bastion-keypair"
+bastion_private_ip = "10.0.0.113"
+bastion_public_ip = "13.236.68.167"
+efs_id = "fs-09dbcd4808dadbf8a"
+iam_user_name = "test-csk-ccf-awc-restricted"
+intra_cluster_security_group_id = "sg-09d96b9da83a0c5f9"
+intra_cluster_security_group_name = "test-csk-intra"
+private_subnet_ids = [
+  "subnet-07fb171674e26d75a",
+]
+private_subnets = [
+  {
+    "id" = "subnet-07fb171674e26d75a"
+    "name" = "test-csk-private-01"
+  },
+]
+public_subnet_ids = [
+  "subnet-095a804467dab9321",
+]
+public_subnets = [
+  {
+    "id" = "subnet-095a804467dab9321"
+    "name" = "test-csk-public-01"
+  },
+]
+route53_private_zone = {
+  "id" = "Z06922422S0KREL0I3VO6"
+  "name" = "test.clouderapartners.click"
+}
+route53_public_zone = {
+  "id" = "Z06112133EUA6PKBRLGA9"
+  "name" = "test.clouderapartners.click"
+}
+s3_bucket_arn = "arn:aws:s3:::ccf-test-ccf-artifacts"
+s3_bucket_name = "ccf-test-ccf-artifacts"
+vpc_cidr = "10.0.0.0/16"
+vpc_id = "vpc-0613ef3c8b36dd1e6"
+iam_policy_names = {
+  ccf       = "ccf-restricted-test-policy"
+  route53   = "ccf-route53-test-policy"
+  s3_backup = "ccf-s3-backup-test-policy"
+}
+```
+
 ## Bastion Host
 
 When `create_bastion = true`, an Ubuntu 24.04 LTS EC2 instance is launched in the first public subnet. The `files/bastion-csk-installer-prereqs.sh` cloud-init script automatically installs the following tools:

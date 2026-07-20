@@ -1,16 +1,6 @@
-# Copyright 2025 Cloudera, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+########################################
+# VPC
+########################################
 
 output "vpc_id" {
   value       = aws_vpc.csk.id
@@ -22,24 +12,46 @@ output "vpc_cidr" {
   description = "VPC CIDR block"
 }
 
+########################################
+# Availability Zones
+########################################
+
 output "availability_zones" {
-  value       = data.aws_availability_zones.csk
+  value       = data.aws_availability_zones.csk.names
   description = "AWS Availability Zones"
 }
 
-output "public_subnets" {
-  value       = values(aws_subnet.csk_public)
-  description = "Cluster public subnets (empty when create_public_subnet = false)"
-}
+########################################
+# Public Subnets
+########################################
 
-output "private_subnets" {
-  value       = values(aws_subnet.csk_private)
-  description = "Cluster private subnets (tagged with kubernetes.io/role/internal-elb=1)"
+output "public_subnets" {
+  value = [
+    for s in values(aws_subnet.csk_public) : {
+      id   = s.id
+      name = s.tags["Name"]
+    }
+  ]
+  description = "Public subnet IDs and names"
 }
 
 output "public_subnet_ids" {
   value       = [for s in values(aws_subnet.csk_public) : s.id]
-  description = "Public subnet IDs (empty when create_public_subnet = false)"
+  description = "Public subnet IDs"
+}
+
+########################################
+# Private Subnets
+########################################
+
+output "private_subnets" {
+  value = [
+    for s in values(aws_subnet.csk_private) : {
+      id   = s.id
+      name = s.tags["Name"]
+    }
+  ]
+  description = "Private subnet IDs and names"
 }
 
 output "private_subnet_ids" {
@@ -47,57 +59,117 @@ output "private_subnet_ids" {
   description = "Private subnet IDs"
 }
 
-output "intra_cluster_security_group" {
-  value       = aws_security_group.csk
-  description = "Intra-cluster traffic Security Group"
+########################################
+# Security Group
+########################################
+
+output "intra_cluster_security_group_name" {
+  value       = aws_security_group.csk.name
+  description = "Intra-cluster security group name"
 }
 
 output "intra_cluster_security_group_id" {
   value       = aws_security_group.csk.id
-  description = "ID of the intra-cluster security group"
+  description = "Intra-cluster security group ID"
 }
 
+########################################
+# Bastion
+########################################
+
 output "bastion_ip" {
-  value       = var.create_bastion ? (aws_instance.bastion[0].public_ip != "" ? aws_instance.bastion[0].public_ip : aws_instance.bastion[0].private_ip) : ""
-  description = "Routable IP of the bastion (public if the subnet auto-assigned one, otherwise private). Empty when create_bastion = false."
+  value = var.create_bastion ? (
+    aws_instance.bastion[0].public_ip != "" ?
+    aws_instance.bastion[0].public_ip :
+    aws_instance.bastion[0].private_ip
+  ) : ""
+
+  description = "Bastion IP address"
 }
 
 output "bastion_public_ip" {
   value       = var.create_bastion ? aws_instance.bastion[0].public_ip : ""
-  description = "Public IP of bastion (empty if not assigned or bastion disabled)"
+  description = "Bastion public IP"
 }
 
 output "bastion_private_ip" {
   value       = var.create_bastion ? aws_instance.bastion[0].private_ip : ""
-  description = "Private IP of bastion (empty when create_bastion = false)"
+  description = "Bastion private IP"
 }
 
 output "bastion_keypair_name" {
   value       = var.create_bastion ? aws_key_pair.bastion[0].key_name : ""
-  description = "AWS key pair name used by bastion (empty when create_bastion = false)"
+  description = "Bastion key pair name"
 }
+
+########################################
+# EFS
+########################################
 
 output "efs_id" {
   value       = var.create_efs ? aws_efs_file_system.ccf_awc[0].id : ""
-  description = "EFS file system ID (empty when create_efs = false)"
+  description = "EFS File System ID"
 }
+
+########################################
+# S3
+########################################
 
 output "s3_bucket_name" {
   value       = var.create_s3_bucket && local.s3_bucket_full_name != "" ? aws_s3_bucket.csk[0].bucket : ""
-  description = "S3 bucket name (empty when create_s3_bucket = false)"
+  description = "S3 bucket name"
 }
+
+output "s3_bucket_arn" {
+  value       = var.create_s3_bucket && local.s3_bucket_full_name != "" ? aws_s3_bucket.csk[0].arn : ""
+  description = "S3 bucket ARN"
+}
+
+########################################
+# IAM
+########################################
 
 output "iam_user_name" {
   value       = var.create_iam_user ? aws_iam_user.restricted[0].name : ""
-  description = "IAM user name created for restricted access (empty when create_iam_user = false)"
+  description = "Restricted IAM user"
 }
 
-output "route53_public_zone_id" {
-  value       = var.create_public_hosted_zone ? aws_route53_zone.public[0].zone_id : ""
-  description = "Public Route53 hosted zone ID (empty when create_public_hosted_zone = false)"
+########################################
+# Route53 Public Hosted Zone
+########################################
+
+output "route53_public_zone" {
+  value = var.create_public_hosted_zone ? {
+    id   = aws_route53_zone.public[0].zone_id
+    name = aws_route53_zone.public[0].name
+  } : null
+
+  description = "Public Route53 hosted zone"
 }
 
-output "route53_private_zone_id" {
-  value       = var.create_private_hosted_zone ? aws_route53_zone.private[0].zone_id : ""
-  description = "Private Route53 hosted zone ID (empty when create_private_hosted_zone = false)"
+########################################
+# Route53 Private Hosted Zone
+########################################
+
+output "route53_private_zone" {
+  value = var.create_private_hosted_zone ? {
+    id   = aws_route53_zone.private[0].zone_id
+    name = aws_route53_zone.private[0].name
+  } : null
+
+  description = "Private Route53 hosted zone"
+}
+
+########################################
+# IAM Policies
+########################################
+
+output "iam_policy_names" {
+  value = var.create_iam_policies ? {
+    ccf      = aws_iam_policy.ccf[0].name
+    route53  = aws_iam_policy.route53[0].name
+    s3_backup = aws_iam_policy.s3[0].name
+  } : {}
+
+  description = "Names of the IAM policies created"
 }
