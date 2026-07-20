@@ -18,7 +18,7 @@ variable "prefix" {
   type        = string
   description = "Deployment prefix for all cloud-provider assets"
   validation {
-    condition     = length(var.prefix) >= 4 && length(var.prefix) <= 7
+    condition     = length(var.prefix) >= 4 && length(var.prefix) <= 10
     error_message = "Valid length for prefix is between 4-7 characters."
   }
 }
@@ -28,6 +28,11 @@ variable "aws_region" {
   description = "AWS region to deploy resources into"
 }
 
+variable "owner" {
+  type        = string
+  description = "Owner tag for all resources"
+  default     = "coe-pse-apac"
+}
 # ------- VPC -------
 
 variable "vpc_name" {
@@ -150,4 +155,52 @@ variable "bastion_ssh_allowed_cidrs" {
   type        = list(string)
   description = "CIDR blocks allowed to reach the bastion on port 22. An empty list creates no inbound SSH rules."
   default     = []
+}
+
+# ------- S3 bucket (optional) -------
+variable "create_s3_bucket" {
+  description = "Flag to determine if an S3 bucket should be created"
+  type        = bool
+  default     = false
+}
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket to be created. Leave empty if no bucket is required."
+  type        = string
+  default     = ""
+}
+
+variable "create_iam_user" {
+  description = "Flag to determine if an IAM user should be created"
+  type        = bool
+  default     = false
+}
+
+variable "create_iam_policies" {
+  description = "Flag to determine if IAM policies should be created"
+  type        = bool
+  default     = false
+}
+
+variable "create_efs" {
+  description = "Flag to determine if EFS should be created"
+  type        = bool
+  default     = false
+}
+#--------Hosted Zone---------------
+
+variable "parent_hosted_zone" {
+  description = "Existing parent hosted zone"
+  type        = string
+  default     = "clouderapartners.click"
+}
+
+variable "create_public_hosted_zone" {
+  type    = bool
+  default = true
+}
+
+variable "create_private_hosted_zone" {
+  type    = bool
+  default = true
 }
