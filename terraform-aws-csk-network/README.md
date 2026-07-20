@@ -1,8 +1,8 @@
 # AWS Network Infrastructure for CSK & CCF
 
-Terraform root module that provisions the AWS VPC and networking prerequisites required to install **Cloudera Service for Kubernetes (CSK)** and **Cloudera Cloud Factory (CCF)**. It creates a production-ready, fully configurable AWS network environment including VPC, private/public subnets, NAT Gateways, security groups, optional EFS, S3, IAM user/policies, Route 53 hosted zones, and an optional bastion host pre-configured as a CSK/CCF installer workstation.
+Terraform root module that provisions the AWS VPC and networking prerequisites required to install **Cloudera Service for Kubernetes (CSK)** and **Cloudera Cloud Factory (CCF)**. It creates a production-ready private network topology that serves as the foundation for all subsequent CSK and CCF infrastructure.
 
-> **Bastion host capability:** When enabled, the bastion is an Ubuntu 24.04 LTS EC2 instance that is fully provisioned via cloud-init as a CSK/CCF installer workstation. It comes pre-installed with **Docker**, **Ansible Core 2.17.8** (in a shared Python venv), **OpenTofu 1.6.2**, **ORAS CLI 1.2.0**, **Flux CLI**, **kubectl 1.30**, and **k9s**.
+> **Bastion host capability:** When enabled, the bastion is an Ubuntu 24.04 LTS EC2 instance that is fully provisioned via cloud-init as a CSK/CCF installer workstation. It comes pre-installed with **Docker, Ansible, OpenTofu, ORAS CLI, Flux CLI, kubectl, k9s**, and all other prerequisites — ready to use immediately after `terraform apply`.
 
 ---
 
@@ -290,6 +290,15 @@ create_private_hosted_zone = true
 | `hashicorp/tls` | `>= 4.0` |
 | `hashicorp/local` | `>= 2.4` |
 | `hashicorp/null` | `>= 3.0` |
+
+---
+
+## Authors
+
+- **Kuldeep Sahu** (<ksahu@cloudera.com>)
+- **Yash Gulati** (<ygulati@cloudera.com>)
+
+*Additional credits to **Jim Enright** (<jenright@cloudera.com>) for baseline code and lots of ideas.*
 
 ---
 
