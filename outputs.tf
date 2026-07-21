@@ -35,10 +35,12 @@ output "public_subnets" {
   description = "Public subnet IDs and names"
 }
 
+/*
 output "public_subnet_ids" {
   value       = [for s in values(aws_subnet.csk_public) : s.id]
   description = "Public subnet IDs"
 }
+*/
 
 ########################################
 # Private Subnets
@@ -54,15 +56,18 @@ output "private_subnets" {
   description = "Private subnet IDs and names"
 }
 
+/*
 output "private_subnet_ids" {
   value       = [for s in values(aws_subnet.csk_private) : s.id]
   description = "Private subnet IDs"
 }
+*/
 
 ########################################
 # Security Group
 ########################################
 
+/*
 output "intra_cluster_security_group_name" {
   value       = aws_security_group.csk.name
   description = "Intra-cluster security group name"
@@ -72,6 +77,7 @@ output "intra_cluster_security_group_id" {
   value       = aws_security_group.csk.id
   description = "Intra-cluster security group ID"
 }
+*/
 
 ########################################
 # Bastion
@@ -84,9 +90,10 @@ output "bastion_ip" {
     aws_instance.bastion[0].private_ip
   ) : ""
 
-  description = "Bastion IP address"
+  description = "Bastion Server IP address"
 }
 
+/*
 output "bastion_public_ip" {
   value       = var.create_bastion ? aws_instance.bastion[0].public_ip : ""
   description = "Bastion public IP"
@@ -96,6 +103,7 @@ output "bastion_private_ip" {
   value       = var.create_bastion ? aws_instance.bastion[0].private_ip : ""
   description = "Bastion private IP"
 }
+*/
 
 output "bastion_keypair_name" {
   value       = var.create_bastion ? aws_key_pair.bastion[0].key_name : ""
